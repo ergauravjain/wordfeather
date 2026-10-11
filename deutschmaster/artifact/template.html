@@ -551,7 +551,7 @@ function questionHTML(e,q,i,exam){
       return `<button class="opt ${cls}" data-act="pick" data-ex="${e.id}" data-i="${i}" data-v='${JSON.stringify(val)}' aria-pressed="${sel}" ${done?"disabled":""}><span class="box">${q.t==="tf"?(val?"R":"F"):"abc"[j]}</span><span>${esc(lab)}</span></button>`; }).join("")}</div>`;
   } else {
     body=q.left.map((L,j)=>{ const v=(a.q[i]||[])[j]; const ok=done&&v===q.a[j];
-      return `<div class="match-row"><span class="small">${j+1}. ${esc(L)}</span><select data-act="match" data-ex="${e.id}" data-i="${i}" data-j="${j}" aria-label="Ad for person ${j+1}" ${done?"disabled":""} style="${done?`border-color:${ok?"var(--good)":"var(--bad)"}`:""}">
+      return `<div class="match-row"><span class="small">${j+1}. ${esc(L)}</span><select data-act="match" data-ex="${e.id}" data-i="${i}" data-j="${j}" aria-label="Match for item ${j+1}" ${done?"disabled":""} style="${done?`border-color:${ok?"var(--good)":"var(--bad)"}`:""}">
         <option value="">–</option>${q.right.map((r,k)=>`<option value="${k}" ${v===k?"selected":""}>${esc(r)}</option>`).join("")}<option value="-1" ${v===-1?"selected":""}>0</option></select></div>`; }).join("");
   }
   const right = q.t==="match" ? q.a.every((v,j)=>(a.q[i]||[])[j]===v) : a.q[i]===q.a;
