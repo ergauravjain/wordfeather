@@ -7,7 +7,7 @@ The hosted version of DeutschMaster: one HTML file that runs without a server.
   - `wordfeather/grammar_*.json`: 814 grammar questions
   - `german-nouns/german_nouns/nouns.csv`: plurals for 2,413 nouns
   - `GermanWordEmbeddings/src/*.txt`: opposites, odd one out, analogies, plurals
-- `content.js` + `content_more.js`: reading, listening, writing and speaking tasks for A1–C1 (original texts in Goethe format)
+- `content.js`, `content_more.js` (extra Lesen/Hören), `content_more2.js` (extra Schreiben/Sprechen A1–B2): reading, listening, writing and speaking tasks for A1–C1 (original texts in Goethe format)
 - `template.html`: the app; `__DATA__` and `__CONTENT__` are filled in by the build
 
 Build:
@@ -16,8 +16,9 @@ Build:
 python3 build_data.py            # writes data.json (paths assume repos in /home/user)
 python3 - <<'PY'
 t=open('template.html').read()
-open('deutschmaster.html','w').write(t.replace('__DATA__',open('data.json').read().replace('</','<\\/')).replace('__CONTENT__',open('content.js').read()+'\n'+open('content_more.js').read()))
+open('deutschmaster.html','w').write(t.replace('__DATA__',open('data.json').read().replace('</','<\\/')).replace('__CONTENT__','\n'.join(open(f).read() for f in ['content.js','content_more.js','content_more2.js'])))
 PY
 node e2e.mjs                     # clicks through every feature (needs Playwright)
+node ws.mjs a1-schreiben-3 …        # opens the given writing/speaking tasks, grades/saves each
 node answers.mjs                 # answers every Lesen/Hören task with its key; all must score 100 %
 ```
