@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.local
+
+# The repo root .gitignore (Python template) ignores lib/ — re-include ours.
+!lib/

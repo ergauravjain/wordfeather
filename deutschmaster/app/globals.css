@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Design tokens. Utilities reference the CSS variables, so dark mode is a
+   variable swap — no `dark:` variants needed in components. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-track: var(--track);
+
+  /* Level identity accents — always shown together with the level code. */
+  --color-lvl-a1: var(--lvl-a1);
+  --color-lvl-a2: var(--lvl-a2);
+  --color-lvl-b1: var(--lvl-b1);
+  --color-lvl-b2: var(--lvl-b2);
+  --color-lvl-c1: var(--lvl-c1);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #f1f1ee;
+  --border: #e4e4e0;
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-subtle: #71717a;
+  --primary: #18181b;
+  --primary-fg: #ffffff;
+  --accent: #b45309;
+  --success: #15803d;
+  --warning: #b45309;
+  --track: #e7e7e3;
+
+  --lvl-a1: #16a34a;
+  --lvl-a2: #2563eb;
+  --lvl-b1: #c026d3;
+  --lvl-b2: #ea580c;
+  --lvl-c1: #0d9488;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111110;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --border: #2e2e2b;
+    --fg: #f4f4f5;
+    --fg-muted: #a1a1aa;
+    --fg-subtle: #8b8b94;
+    --primary: #f4f4f5;
+    --primary-fg: #18181b;
+    --accent: #f59e0b;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --track: #2e2e2b;
+
+    --lvl-a1: #22c55e;
+    --lvl-a2: #3b82f6;
+    --lvl-b1: #d946ef;
+    --lvl-b2: #f97316;
+    --lvl-c1: #14b8a6;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111110;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --border: #2e2e2b;
+  --fg: #f4f4f5;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #8b8b94;
+  --primary: #f4f4f5;
+  --primary-fg: #18181b;
+  --accent: #f59e0b;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --track: #2e2e2b;
+
+  --lvl-a1: #22c55e;
+  --lvl-a2: #3b82f6;
+  --lvl-b1: #d946ef;
+  --lvl-b2: #f97316;
+  --lvl-c1: #14b8a6;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}

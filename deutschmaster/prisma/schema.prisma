@@ -1,0 +1,241 @@
+// DeutschMaster data model.
+// Content (exercises, mock exams, vocabulary) is level-scoped; learner state
+// (attempts, SRS progress, bookmarks, study sessions) hangs off User.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Level {
+  A1
+  A2
+  B1
+  B2
+  C1
+}
+
+enum Skill {
+  READING
+  LISTENING
+  WRITING
+  SPEAKING
+}
+
+enum ExamProvider {
+  GOETHE
+  TELC
+  TESTDAF
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  MATCHING
+}
+
+// ─── Learners ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  targetLevel   Level?
+  examProvider  ExamProvider  @default(GOETHE)
+  currentStreak Int           @default(0)
+  longestStreak Int           @default(0)
+  lastStudyDate DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  exerciseAttempts ExerciseAttempt[]
+  examAttempts     ExamAttempt[]
+  cardProgress     CardProgress[]
+  bookmarks        Bookmark[]
+  studySessions    StudySession[]
+}
+
+// ─── Practice content ────────────────────────────────────────────────────────
+
+model Exercise {
+  id           String       @id
+  level        Level
+  skill        Skill
+  provider     ExamProvider @default(GOETHE)
+  /// Exam part this mirrors, e.g. "Lesen Teil 1".
+  part         String
+  title        String
+  instructions String
+  /// Reading text, or listening transcript.
+  passage      String?
+  /// Listening: pre-recorded audio. When null the client falls back to TTS on `passage`.
+  audioUrl     String?
+  /// Listening: how many times the audio may be played (exam-style).
+  maxPlays     Int?
+  /// Writing/speaking task prompt.
+  prompt       String?
+  /// Writing/speaking: bullet points the answer must cover.
+  taskPoints   String[]
+  minWords     Int?
+  maxWords     Int?
+  prepSeconds  Int?
+  speakSeconds Int?
+  timeLimitSec Int?
+  maxPoints    Int          @default(10)
+  createdAt    DateTime     @default(now())
+
+  questions    Question[]
+  attempts     ExerciseAttempt[]
+  examSections MockExamSection[]
+
+  @@index([level, skill])
+}
+
+model Question {
+  id          String       @id
+  exerciseId  String
+  order       Int
+  type        QuestionType
+  prompt      String
+  /// MULTIPLE_CHOICE: string[] · MATCHING: { left: string[], right: string[] }
+  options     Json?
+  /// MULTIPLE_CHOICE: index · TRUE_FALSE: boolean · MATCHING: number[] (left i → right j)
+  answer      Json
+  explanation String
+
+  exercise  Exercise   @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  bookmarks Bookmark[]
+
+  @@unique([exerciseId, order])
+}
+
+model MockExam {
+  id          String       @id
+  level       Level
+  provider    ExamProvider
+  title       String
+  description String
+  /// Percent of points needed per module to pass.
+  passPercent Int          @default(60)
+
+  sections MockExamSection[]
+  attempts ExamAttempt[]
+}
+
+model MockExamSection {
+  id              String @id
+  mockExamId      String
+  skill           Skill
+  order           Int
+  durationMinutes Int
+  maxPoints       Int
+
+  mockExam  MockExam   @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
+  exercises Exercise[]
+
+  @@unique([mockExamId, order])
+}
+
+model VocabCard {
+  id           String  @id
+  level        Level
+  topic        String
+  german       String
+  article      String?
+  plural       String?
+  partOfSpeech String
+  english      String
+  example      String
+  exampleEn    String
+
+  progress CardProgress[]
+
+  @@index([level, topic])
+}
+
+// ─── Learner state ───────────────────────────────────────────────────────────
+
+model ExerciseAttempt {
+  id         String   @id @default(cuid())
+  userId     String
+  exerciseId String
+  score      Float
+  maxScore   Float
+  /// Raw answers (choices, text, or a recording reference).
+  answers    Json?
+  /// AI grading rubric output for writing/speaking.
+  feedback   Json?
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, exerciseId])
+}
+
+model ExamAttempt {
+  id            String    @id @default(cuid())
+  userId        String
+  mockExamId    String
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  /// { [skill]: { score, maxScore } }
+  sectionScores Json?
+  totalPercent  Float?
+  passed        Boolean?
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mockExam MockExam @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Leitner box + SM-2-style interval for one learner × card.
+model CardProgress {
+  id             String    @id @default(cuid())
+  userId         String
+  cardId         String
+  box            Int       @default(1)
+  ease           Float     @default(2.5)
+  intervalDays   Int       @default(0)
+  reps           Int       @default(0)
+  lapses         Int       @default(0)
+  dueAt          DateTime  @default(now())
+  lastReviewedAt DateTime?
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card VocabCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, dueAt])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+}
+
+model StudySession {
+  id      String   @id @default(cuid())
+  userId  String
+  /// Calendar day (UTC midnight) — one row per user per day.
+  date    DateTime @db.Date
+  minutes Int      @default(0)
+  xp      Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
